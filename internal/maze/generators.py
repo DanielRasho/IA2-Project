@@ -1,21 +1,30 @@
-# package maze
+from enum import IntEnum
+from maze import MazeBoard
 
-# type GeneratorType = int
+class GeneratorType(IntEnum):
+    BACKTRACKING = 0
+    PRIM = 1
+	
+class Generator:
+    def __init__(self, height: int, width: int):
+        self.height = height
+        self.width = width
 
-# const (
-# 	BACKTRACKING = iota
-# 	PRIM
-# )
+    def generate(self):
+        raise NotImplementedError("Subclasses should implement generate()")
 
-# type Generator interface {
-# 	Generate() *MazeBoard
-# 	GenerateTick() *MazeBoard
-# }
+    def generate_tick(self):
+        raise NotImplementedError("Subclasses should implement generate_tick()")
 
-# func Generate() *MazeBoard {
-# 	return nil
-# }
+class BacktrackingGenerator(Generator):
+    def __init__(self, height: int, width: int):
+        super().__init__(height, width)
+        self.board = MazeBoard(height, width)
 
-# func GenerateTick() *MazeBoard {
-# 	return nil
-# }
+    def generate(self):
+        # Do full maze generation
+        return self.board
+
+    def generate_tick(self):
+        # Step-by-step logic
+        return self.board

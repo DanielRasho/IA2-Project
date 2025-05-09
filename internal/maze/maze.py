@@ -4,6 +4,7 @@ class CellMark(IntEnum):
     EMPTY = 0
     WALL = 1
     PATH = 2
+    SCANNED = 3
     
 class MazeBoard:
     def __init__(self, height: int, width: int):

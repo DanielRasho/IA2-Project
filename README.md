@@ -11,7 +11,7 @@ pip install -r requirements.txt
 2. Run each problem
 
 ```bash
-python problema1.py
+python problem1.py
 python problem2.py
 python problem3.py
 ```

@@ -5,15 +5,8 @@ from .solver import Solver
 
 class Dijikstra(Solver):
     def __init__(self, board: MazeBoard, start : int, goal: int):
-        self.board = board
-        self.start = start
-        self.goal = goal
-        # YOU ARE RESPONSABLE FOR UPDATING THIS VARIABLES:
-        self.solution_path = []
-        self.scanned_tiles = 0
+        super().__init__(board, start, goal)
         
-    # Return True if the maze has not be solved
-    # False either
     def solve_tick(self) -> bool:
         # modify the maze internally
         # Do path finding and whatever

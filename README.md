@@ -1,3 +1,5 @@
+# Mazes solvers
+
 ## How to run
 
 1. Install dependencies

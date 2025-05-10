@@ -1,7 +1,7 @@
 import tkinter as tk
-from internal.maze.maze import MazeBoard, CellMark, get_random_start_goal
-from internal.maze.generators import Generator, get_generator, GeneratorType
-from internal.solver.Dijikstra import Dijikstra
+from internal.maze.maze import get_random_start_goal
+from internal.maze.generators import get_generator, GeneratorType
+from internal.solver.Dijikstra import Solver, Dijikstra
 
 # ---------- MAIN ----------
 # Boilerplate code
@@ -15,7 +15,8 @@ if __name__ == "__main__":
     # Select random start and goal
     start, goal = get_random_start_goal(maze, 3)
     
-    solver = Dijikstra(maze, start, goal)
+    # Choose your solfer for the job
+    solver : Solver = Dijikstra(maze, start, goal)
     
     # Solve the maze
     while solver.solve_tick() :
@@ -23,5 +24,5 @@ if __name__ == "__main__":
         
     print("Maze solved!")
     print(solver.board)
-    print(f"tiles scanned {solver.scanned_tiles}")
-    print(f"solution path tiles {solver.scanned_tiles}")
+    print(f"tiles scanned {solver.get_scanned_tiles()}")
+    print(f"solution path tiles {solver.get_solution_path()}")

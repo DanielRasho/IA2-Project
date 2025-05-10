@@ -6,16 +6,17 @@ class CellMark(IntEnum):
     EMPTY = 0
     WALL = 1
     PATH = 2  # For the solver to mark the path
-    SCANNED = 3  # For the solver to mark scanned cells during solving
+    SCANNED = 3  # For the solver to mark scanned cells during search
     
 class MazeBoard:
+    '''
+        Representation of a maze. The maze is stored as a 1D array of CellMark.
+        It provides utility methods to treat it as a 2D matrix.
+    '''
     def __init__(self, height: int, width: int, fill : CellMark = CellMark.EMPTY):
         self.height = height
         self.width = width
         self.cells = [fill] * (height * width)
-
-    def _index(self, row: int, col: int) -> int:
-        return row * self.width + col
 
     def get_cell(self, row: int, col: int) -> CellMark:
         if not self._valid_coords(row, col):
@@ -27,11 +28,15 @@ class MazeBoard:
             raise IndexError("Coordinates out of bounds")
         self.cells[self._index(row, col)] = value
 
+    def cell_as_coordinates(self, index:int) -> Tuple[int, int]:
+        '''Returns 2D coordinates given a cell index'''
+        return ( index % self.width ,index // self.width)
+
+    def _index(self, row: int, col: int) -> int:
+        return row * self.width + col
+
     def _valid_coords(self, row: int, col: int) -> bool:
         return 0 <= row < self.height and 0 <= col < self.width
-    
-    def cell_as_coordinates(self, index:int) -> Tuple[int, int]:
-        return ( index % self.width ,index // self.width)
 
     def __str__(self):
         result = ""
@@ -50,7 +55,9 @@ class MazeBoard:
         return result
 
 def get_random_start_goal(maze: MazeBoard, min_distance: int) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-    # Get all empty cells
+    '''
+        Select 2 random EMPTY cells from a mazeboard with a list a minimum manhattan distance.
+    '''
     
     empty_cells = [ maze.cell_as_coordinates(i)
                    for i, cell in enumerate(maze.cells) if cell == CellMark.EMPTY]

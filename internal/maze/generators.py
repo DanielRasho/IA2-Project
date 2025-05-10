@@ -3,6 +3,10 @@ from typing import Tuple, List
 from .maze import MazeBoard, CellMark
 import random
 
+class GeneratorType(IntEnum):
+    BORUBSKA = 0
+    PRIM = 1
+
 class Generator:
     def __init__(self, height: int, width: int):
         self.height = height
@@ -13,25 +17,123 @@ class Generator:
         raise NotImplementedError("Subclasses should implement generate()")
 
     '''Represents one tick of the generation step'''
-    def generate_tick(self) -> None:
+    def generate_tick(self) -> bool:
         raise NotImplementedError("Subclasses should implement generate_tick()")
 
     '''Returns a Mazeboard representation of the internal maze generator'''
     def to_maze() -> MazeBoard:
         raise NotImplementedError("Subclasses should implement generate_tick()")
 
-class BacktrackingGenerator(Generator):
+class BorubskaGenerator(Generator):
+    NORTH = 0
+    SOUTH = 1
+    EAST = 2
+    WEST = 3
+    VISITED = 4
+
     def __init__(self, height: int, width: int):
         super().__init__(height, width)
-        self.board = MazeBoard(height, width)
+        self.rng = random.Random()
+        self.grid = [[0b1111 for _ in range(width)] for _ in range(height)]
+        self.components = {}  # To keep track of connected components
+        self.edges = []       # List of edges between components
+        self.phase_completed = False
+        
+        # Initialize components and edges, each cell is its own component
+        for y in range(height):
+            for x in range(width):
+                idx = y * width + x
+
+                # Insert each node as a component
+                self.components[idx] = idx
+
+                # Build all possible edges with their weights.
+                if y > 0:  # NORTH
+                    self.edges.append((idx, idx - self.width))
+                if y < self.height - 1:  # SOUTH
+                    self.edges.append((idx, idx + self.width))
+                if x > 0:  # WEST
+                    self.edges.append((idx, idx - 1))
+                if x < self.width - 1:  # EAST
+                    self.edges.append((idx, idx + 1))
+        # Shuffle the edges to introduce randomness
+        self.rng.shuffle(self.edges)
+
+        
+    def _find(self, component):
+        """Find the root of the component."""
+        if self.components[component] != component:
+            self.components[component] = self._find(self.components[component])
+        return self.components[component]
+
+    def _union(self, u, v):
+        """Union two components."""
+        root_u = self._find(u)
+        root_v = self._find(v)
+        if root_u != root_v:
+            self.components[root_v] = root_u
 
     def generate(self) -> MazeBoard:
-        # Do full maze generation
-        return self.board
+        """Generate the full maze using Borůvka's algorithm."""
+        while not self.phase_completed:
+            self.generate_tick()
+        return self.to_maze()
 
-    def generate_tick(self) -> Tuple[MazeBoard, bool]:
-        # Step-by-step logic
-        return self.board, False
+    def generate_tick(self) -> bool:
+        """One step in the Borůvka's algorithm, processing a single edge."""
+        if not self.edges or self.phase_completed:
+            return False
+
+        # Pop one edge from the list
+        u, v = self.edges.pop()
+
+        root_u = self._find(u)
+        root_v = self._find(v)
+
+        if root_u != root_v:
+            self._union(u, v)
+
+            # Remove the walls in the maze representation
+            uy, ux = divmod(u, self.width)
+            vy, vx = divmod(v, self.width)
+
+            if uy == vy and ux + 1 == vx:
+                self.grid[uy][ux] &= ~(1 << self.EAST)
+                self.grid[vy][vx] &= ~(1 << self.WEST)
+            elif uy == vy and ux - 1 == vx:
+                self.grid[uy][ux] &= ~(1 << self.WEST)
+                self.grid[vy][vx] &= ~(1 << self.EAST)
+            elif ux == vx and uy + 1 == vy:
+                self.grid[uy][ux] &= ~(1 << self.SOUTH)
+                self.grid[vy][vx] &= ~(1 << self.NORTH)
+            elif ux == vx and uy - 1 == vy:
+                self.grid[uy][ux] &= ~(1 << self.NORTH)
+                self.grid[vy][vx] &= ~(1 << self.SOUTH)
+
+        # If there are no more edges to process, mark as completed
+        if not self.edges:
+            self.phase_completed = True
+
+        return True
+
+    def to_maze(self) -> MazeBoard:
+        """Convert the internal bitmask representation to a MazeBoard."""
+        maze_board = MazeBoard(self.height * 2 + 1, self.width * 2 + 1, CellMark.WALL)
+        for i in range(self.height):
+            for j in range(self.width):
+                r, c = i * 2 + 1, j * 2 + 1
+                maze_board.set_cell(r, c, CellMark.EMPTY)
+
+                if not (self.grid[i][j] & (1 << self.NORTH)):
+                    maze_board.set_cell(r - 1, c, CellMark.EMPTY)
+                if not (self.grid[i][j] & (1 << self.SOUTH)):
+                    maze_board.set_cell(r + 1, c, CellMark.EMPTY)
+                if not (self.grid[i][j] & (1 << self.WEST)):
+                    maze_board.set_cell(r, c - 1, CellMark.EMPTY)
+                if not (self.grid[i][j] & (1 << self.EAST)):
+                    maze_board.set_cell(r, c + 1, CellMark.EMPTY)
+
+        return maze_board
 
 class PrimsGenerator(Generator):
     NORTH = 0
@@ -127,12 +229,8 @@ class PrimsGenerator(Generator):
 
         return maze_board
 
-class GeneratorType(IntEnum):
-    BACKTRACKING = 0
-    PRIM = 1
-    
 def get_generator(type: GeneratorType, height, width) -> Generator:
-    if type == GeneratorType.BACKTRACKING:
-        return BacktrackingGenerator(height, width)
+    if type == GeneratorType.BORUBSKA:
+        return BorubskaGenerator(height, width)
     elif type == GeneratorType.PRIM:
         return PrimsGenerator(height, width)

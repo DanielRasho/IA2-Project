@@ -48,8 +48,12 @@ if __name__ == "__main__":
     generator = PrimsGenerator(5, 5)
     generator.generate()
     board = generator.to_matrix()
+    start, goal = get_random_start_goal(board, 3)
+    
+    board.set_cell(start[0], start[1], CellMark.SCANNED)
+    board.set_cell(goal[0], goal[1], CellMark.SCANNED)
+
     print(board)
-    print(get_random_start_goal(board, 3))
 
     # Initialize Tkinter root window
     root = tk.Tk()

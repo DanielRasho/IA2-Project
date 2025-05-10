@@ -20,7 +20,7 @@ class MazeUI:
         self.animate()
 
     def draw_maze(self):
-        maze_board : MazeBoard = self.generator.to_matrix()
+        maze_board : MazeBoard = self.generator.to_maze()
         self.canvas.delete("all")
 
         for row in range(maze_board.height):
@@ -44,10 +44,9 @@ class MazeUI:
 
 # ---------- MAIN ----------
 if __name__ == "__main__":
-    # Initialize the generator with a 10x10 maze
     generator = PrimsGenerator(5, 5)
     generator.generate()
-    board = generator.to_matrix()
+    board = generator.to_maze()
     start, goal = get_random_start_goal(board, 3)
     
     board.set_cell(start[0], start[1], CellMark.SCANNED)

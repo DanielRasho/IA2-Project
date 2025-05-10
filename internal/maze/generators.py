@@ -17,7 +17,7 @@ class Generator:
         raise NotImplementedError("Subclasses should implement generate_tick()")
 
     '''Returns a Mazeboard representation of the internal maze generator'''
-    def to_matrix() -> MazeBoard:
+    def to_maze() -> MazeBoard:
         raise NotImplementedError("Subclasses should implement generate_tick()")
 
 class BacktrackingGenerator(Generator):
@@ -90,7 +90,7 @@ class PrimsGenerator(Generator):
         while self.frontier:
             self.generate_tick()
 
-        return self.to_matrix()
+        return self.to_maze()
 
     def generate_tick(self) -> bool:
         if not self.frontier:
@@ -108,7 +108,7 @@ class PrimsGenerator(Generator):
             self._add_frontier(ni, nj)
         return True
 
-    def to_matrix(self):
+    def to_maze(self):
         maze_board = MazeBoard(self.height * 2 + 1, self.width * 2 + 1, CellMark.WALL)
 
         for i in range(self.height):

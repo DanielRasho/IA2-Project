@@ -23,7 +23,7 @@
       python = pkgs.python3.withPackages (p: [p.pandas]);
     in {
       default = pkgs.mkShell {
-        packages = [python];
+        packages = [python pkgs.black];
       };
     });
   };

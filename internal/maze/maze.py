@@ -2,18 +2,25 @@ from enum import IntEnum
 from typing import Tuple
 import random
 
+
 class CellMark(IntEnum):
     EMPTY = 0
     WALL = 1
     PATH = 2  # For the solver to mark the path
     SCANNED = 3  # For the solver to mark scanned cells during search
-    
+
+    # States the solvers can use
+    START = 4
+    END = 5
+
+
 class MazeBoard:
-    '''
-        Representation of a maze. The maze is stored as a 1D array of CellMark.
-        It provides utility methods to treat it as a 2D matrix.
-    '''
-    def __init__(self, height: int, width: int, fill : CellMark = CellMark.EMPTY):
+    """
+    Representation of a maze. The maze is stored as a 1D array of CellMark.
+    It provides utility methods to treat it as a 2D matrix.
+    """
+
+    def __init__(self, height: int, width: int, fill: CellMark = CellMark.EMPTY):
         self.height = height
         self.width = width
         self.cells = [fill] * (height * width)
@@ -28,9 +35,9 @@ class MazeBoard:
             raise IndexError("Coordinates out of bounds")
         self.cells[self._index(row, col)] = value
 
-    def cell_as_coordinates(self, index:int) -> Tuple[int, int]:
-        '''Returns 2D coordinates given a cell index'''
-        return ( index % self.width ,index // self.width)
+    def cell_as_coordinates(self, index: int) -> Tuple[int, int]:
+        """Returns 2D coordinates given a cell index"""
+        return (index % self.width, index // self.width)
 
     def _index(self, row: int, col: int) -> int:
         return row * self.width + col
@@ -54,21 +61,27 @@ class MazeBoard:
             result += "\n"
         return result
 
-def get_random_start_goal(maze: MazeBoard, min_distance: int) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-    '''
-        Select 2 random EMPTY cells from a mazeboard with a list a minimum manhattan distance.
-    '''
-    
-    empty_cells = [ maze.cell_as_coordinates(i)
-                   for i, cell in enumerate(maze.cells) if cell == CellMark.EMPTY]
-    
+
+def get_random_start_goal(
+    maze: MazeBoard, min_distance: int
+) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """
+    Select 2 random EMPTY cells from a mazeboard with a list a minimum manhattan distance.
+    """
+
+    empty_cells = [
+        maze.cell_as_coordinates(i)
+        for i, cell in enumerate(maze.cells)
+        if cell == CellMark.EMPTY
+    ]
+
     # Pick a random starting cell
     first_cell = random.choice(empty_cells)
-    
+
     # Shuffle and find the first one that matches the distance
     random.shuffle(empty_cells)
     for cell in empty_cells:
         if abs(first_cell[0] - cell[0]) + abs(first_cell[1] - cell[1]) >= min_distance:
             return first_cell, cell
-    
+
     raise ValueError("No valid second cell found with the required distance.")

@@ -20,7 +20,7 @@
   in {
     devShells = forAllSystems (system: let
       pkgs = nixpkgsFor.${system};
-      python = pkgs.python3.withPackages (p: [p.pandas]);
+      python = pkgs.python3.withPackages (p: [p.pandas p.tkinter]);
     in {
       default = pkgs.mkShell {
         packages = [python pkgs.black];

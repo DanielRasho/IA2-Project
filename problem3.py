@@ -12,12 +12,12 @@ from internal.solver.solver_utils import SolverType, SolverFromType
 from random import randint
 import sys
 
-sys.setrecursionlimit(1500)
+sys.setrecursionlimit(15000)
 
 
 class WholeUI:
     CELL_SIZE = 10
-    DELAY = 200  # milliseconds
+    DELAY = 100  # milliseconds
 
     def __init__(
         self,
@@ -120,13 +120,12 @@ class WholeUI:
         self.animate()
 
     def draw_ui(self):
-        if self.current_experiment < 0 and self.current_experiment >= len(self.mazes):
-            return
+        currentIdx = self.current_experiment
+        if self.reached_end_experiments():
+            currentIdx = len(self.mazes) - 1
 
         for sType in self.solvers:
-            maze_board: MazeBoard = self.boards_per_player[sType][
-                self.current_experiment
-            ]
+            maze_board: MazeBoard = self.boards_per_player[sType][currentIdx]
             canvas: tk.Canvas = self.solvers_canvas[sType]
             canvas.delete("all")
 
@@ -162,16 +161,17 @@ class WholeUI:
 
         self.root.update()
 
+    def reached_end_experiments(self) -> bool:
+        return self.current_experiment < 0 and self.current_experiment >= len(
+            self.mazes
+        )
+
     def animate(self):
         # Done animating this current experiment
         experimentDone = len(self.doneSolversType) == len(self.solvers.keys())
         if experimentDone:
             self.current_experiment += 1
-            reachedEndOfExperiments = (
-                self.current_experiment < 0
-                and self.current_experiment >= len(self.mazes)
-            )
-            if reachedEndOfExperiments:
+            if self.reached_end_experiments():
                 return
 
         for sType in self.solvers:
@@ -186,6 +186,8 @@ class WholeUI:
             )
 
             if experimentDone:
+                if self.reached_end_experiments():
+                    return
                 current_board = self.boards_per_player[sType][self.current_experiment]
                 [srow, scol] = current_board.start
                 [erow, ecol] = current_board.end

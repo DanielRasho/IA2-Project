@@ -81,6 +81,7 @@ class A_Star(Solver):
 
         # Add to visited set
         self.visited.add(current_index)
+        self.scanned_tiles += 1
 
         # Mark current cell as scanned (if it's not the start or end)
         current_row, current_col = current_coords

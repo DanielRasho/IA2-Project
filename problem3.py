@@ -91,37 +91,40 @@ class MazeUI:
 
     def animate(self):
         global DONE_COUNT
-        with DONE_COUNT_LOCK:
-            # Done animating this current experiment
-            experimentDone = DONE_COUNT == WORKERS_COUNT and self.finished
-            doneButOthersAreNot = DONE_COUNT != WORKERS_COUNT and self.finished
-            if experimentDone:
-                self.current_experiment += 1
-                reachedEndOfExperiments = (
-                    self.current_experiment < 0
-                    and self.current_experiment >= len(self.mazes)
-                )
-                if reachedEndOfExperiments:
-                    return
+        DONE_COUNT_LOCK.acquire()
+        # Done animating this current experiment
+        experimentDone = DONE_COUNT == WORKERS_COUNT and self.finished
+        doneButOthersAreNot = DONE_COUNT != WORKERS_COUNT and self.finished
+        if experimentDone:
+            self.current_experiment += 1
+            reachedEndOfExperiments = (
+                self.current_experiment < 0
+                and self.current_experiment >= len(self.mazes)
+            )
+            if reachedEndOfExperiments:
+                return
 
-                current_board = self.mazes[self.current_experiment]
-                self.solver = SolverFromType(
-                    self.sType, current_board, current_board.start, current_board.end
-                )
-                self.finished = False
-                DONE_COUNT -= 1
-                self.draw_maze()  # Redraw the maze after a tick
-                self.root.after(self.DELAY, self.animate)
-            elif doneButOthersAreNot:
-                self.root.after(self.DELAY, self.animate)
-            else:  # Normal tick
-                self.finished = self.solver.solve_tick()
+            current_board = self.mazes[self.current_experiment]
+            self.solver = SolverFromType(
+                self.sType, current_board, current_board.start, current_board.end
+            )
+            self.finished = False
+            DONE_COUNT -= 1
+            DONE_COUNT_LOCK.release()
+            self.draw_maze()  # Redraw the maze after a tick
+            self.root.after(self.DELAY, self.animate)
+        elif doneButOthersAreNot:
+            DONE_COUNT_LOCK.release()
+            self.root.after(self.DELAY, self.animate)
+        else:  # Normal tick
+            self.finished = self.solver.solve_tick()
 
-                if self.finished:
-                    DONE_COUNT += 1
+            if self.finished:
+                DONE_COUNT += 1
+            DONE_COUNT_LOCK.release()
 
-                self.draw_maze()
-                self.root.after(self.DELAY, self.animate)  # Continue animation
+            self.draw_maze()
+            self.root.after(self.DELAY, self.animate)  # Continue animation
 
 
 class TableUI:

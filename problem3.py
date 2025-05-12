@@ -56,7 +56,8 @@ class WholeUI:
 
         self.board_per_solver = {}
         for sType in solvers:
-            self.board_per_solver[sType] = [MazeBoard.copy_from(maze) for maze in mazes]
+            self.board_per_solver[sType] = [MazeBoard.copy_from(m) for m in mazes]
+            # self.board_per_solver[sType] = [m for m in mazes]
 
         self.solvers = {
             st: SolverFromType(
@@ -237,8 +238,6 @@ if __name__ == "__main__":
     # Initialize Tkinter root window
     root = tk.Tk()
     root.title("Maze solvers comparison")
-    v = Scrollbar(root)
-    v.pack(side=RIGHT, fill=Y)
 
     maze_width = ((generator.width * 2) + 1) * WholeUI.CELL_SIZE
     maze_height = ((generator.height * 2) + 1) * WholeUI.CELL_SIZE
@@ -252,5 +251,8 @@ if __name__ == "__main__":
     # solvers = [SolverType.BFS, SolverType.DFS, SolverType.DIJIKSTRA, SolverType.A_STAR]
     solvers = [SolverType.DFS, SolverType.A_STAR]
     WholeUI(root, mazes, solvers, maze_width, maze_height, 10, 10)
+
+    v = Scrollbar(root)
+    v.pack(side=RIGHT, fill=Y)
 
     root.mainloop()

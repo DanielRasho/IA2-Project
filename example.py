@@ -13,15 +13,17 @@ if __name__ == "__main__":
     # Retrieve maze board
     maze = generator.to_maze()
     # Select random start and goal
-    start, goal = get_random_start_goal(maze, 3)
-    
-    # Choose your solfer for the job
-    solver : Solver = Dijikstra(maze, start, goal)
-    
+    get_random_start_goal(maze, 3)
+    print("The start is:", maze.start)
+    print("The goal is:", maze.end)
+
+    # Choose your solver for the job
+    solver: Solver = Dijikstra(maze, maze.start, maze.end)
+
     # Solve the maze
-    while solver.solve_tick() :
+    while solver.solve_tick():
         print(solver.board)
-        
+
     print("Maze solved!")
     print(solver.board)
     print(f"tiles scanned {solver.get_scanned_tiles()}")

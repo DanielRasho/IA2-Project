@@ -14,7 +14,7 @@ class Solver:
     def get_solution_path(self) -> list[int]:
         return self.solution_path
 
-    def solve_tick(self) -> tuple[MazeBoard, bool]:
+    def solve_tick(self) -> bool:
         """
         Performs a single step (tick) of the solving algorithm.
 

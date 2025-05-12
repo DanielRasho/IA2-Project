@@ -32,7 +32,9 @@ class MazeBoard:
 
     def set_cell(self, row: int, col: int, value: CellMark):
         if not self._valid_coords(row, col):
-            raise IndexError("Coordinates out of bounds")
+            raise IndexError(
+                "Coordinates out of bounds", (self.width, self.height), (row, col)
+            )
         self.cells[self._index(row, col)] = value
 
     def cell_as_coordinates(self, index: int) -> Tuple[int, int]:
@@ -41,7 +43,10 @@ class MazeBoard:
 
     def set_start_and_end(self, start: tuple[int, int], end: tuple[int, int]):
         self.start = start
+        self.set_cell(start[0], start[1], CellMark.START)
+
         self.end = end
+        self.set_cell(end[0], end[1], CellMark.END)
 
     def _index(self, row: int, col: int) -> int:
         return row * self.width + col
@@ -62,6 +67,10 @@ class MazeBoard:
                     result += "o"
                 elif cell == CellMark.SCANNED:
                     result += "x"
+                elif cell == CellMark.START:
+                    result += "+"
+                elif cell == CellMark.END:
+                    result += "*"
             result += "\n"
         return result
 
@@ -85,6 +94,7 @@ def get_random_start_goal(maze: MazeBoard, min_distance: int):
     random.shuffle(empty_cells)
     for cell in empty_cells:
         if abs(first_cell[0] - cell[0]) + abs(first_cell[1] - cell[1]) >= min_distance:
+            print("Setting start and end", first_cell, cell)
             maze.set_start_and_end(first_cell, cell)
             return
 

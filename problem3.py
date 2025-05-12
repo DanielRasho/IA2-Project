@@ -17,7 +17,7 @@ sys.setrecursionlimit(15000)
 
 class WholeUI:
     CELL_SIZE = 10
-    DELAY = 50  # milliseconds
+    DELAY = 10  # milliseconds
 
     def __init__(
         self,
@@ -170,9 +170,25 @@ class WholeUI:
         # Done animating this current experiment
         allDoneExperiment = len(self.doneSolversType) == len(self.solvers.keys())
         if allDoneExperiment:
+            if self.reached_end_experiments():
+                return
+
+        if allDoneExperiment:
+            print("ALL COMPLETED!")
+            self.doneSolversType = []
             self.current_experiment += 1
             if self.reached_end_experiments():
                 return
+            else:
+                print("Changing board and solvers!")
+                for sType in self.solvers:
+                    next_board = self.boards_per_player[sType][self.current_experiment]
+                    self.solvers[sType] = SolverFromType(
+                        sType,
+                        next_board,
+                        next_board.cords_as_cell(next_board.start),
+                        next_board.cords_as_cell(next_board.end),
+                    )
 
         for sType in self.solvers:
             solver: Solver = self.solvers[sType]
@@ -185,18 +201,13 @@ class WholeUI:
                 and sType in self.doneSolversType
             )
 
-            if allDoneExperiment:
-                self.doneSolversType = []
-                if not self.reached_end_experiments():
-                    next_board = self.boards_per_player[sType][self.current_experiment]
-                    self.solvers[sType] = SolverFromType(
-                        sType,
-                        next_board,
-                        next_board.cords_as_cell(next_board.start),
-                        next_board.cords_as_cell(next_board.end),
-                    )
-            elif doneButOthersAreNot:
-                pass
+            if doneButOthersAreNot:
+                print(
+                    sType,
+                    "Done! But others haven't completed!",
+                    self.doneSolversType,
+                    self.solversType,
+                )
             else:  # Normal tick
                 solved_laberinth = solver.solve_tick()
 
@@ -207,7 +218,7 @@ class WholeUI:
                     self.current_experiment + 1,
                 ]
 
-                if solved_laberinth:
+                if solved_laberinth and sType not in self.doneSolversType:
                     self.doneSolversType.append(sType)
                     finishPosition = len(self.doneSolversType)
                     self.exp_table[sType][2] = finishPosition

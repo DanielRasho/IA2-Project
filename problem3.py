@@ -17,7 +17,7 @@ sys.setrecursionlimit(15000)
 
 class WholeUI:
     CELL_SIZE = 10
-    DELAY = 100  # milliseconds
+    DELAY = 50  # milliseconds
 
     def __init__(
         self,
@@ -168,8 +168,8 @@ class WholeUI:
 
     def animate(self):
         # Done animating this current experiment
-        experimentDone = len(self.doneSolversType) == len(self.solvers.keys())
-        if experimentDone:
+        allDoneExperiment = len(self.doneSolversType) == len(self.solvers.keys())
+        if allDoneExperiment:
             self.current_experiment += 1
             if self.reached_end_experiments():
                 return
@@ -185,23 +185,18 @@ class WholeUI:
                 and sType in self.doneSolversType
             )
 
-            if experimentDone:
-                if self.reached_end_experiments():
-                    return
-                current_board = self.boards_per_player[sType][self.current_experiment]
-                [srow, scol] = current_board.start
-                [erow, ecol] = current_board.end
-                self.solvers[sType] = SolverFromType(
-                    sType,
-                    current_board,
-                    current_board.cords_as_cell(current_board.start),
-                    current_board.cords_as_cell(current_board.end),
-                )
+            if allDoneExperiment:
                 self.doneSolversType = []
-                self.draw_ui()  # Redraw the maze after a tick
-                self.root.after(self.DELAY, self.animate)
+                if not self.reached_end_experiments():
+                    next_board = self.boards_per_player[sType][self.current_experiment]
+                    self.solvers[sType] = SolverFromType(
+                        sType,
+                        next_board,
+                        next_board.cords_as_cell(next_board.start),
+                        next_board.cords_as_cell(next_board.end),
+                    )
             elif doneButOthersAreNot:
-                self.root.after(self.DELAY, self.animate)
+                pass
             else:  # Normal tick
                 solved_laberinth = solver.solve_tick()
 
@@ -220,8 +215,8 @@ class WholeUI:
                         finishPosition - self.avg_table[sType]
                     ) / (self.current_experiment + 1)
 
-                self.draw_ui()
-                self.root.after(self.DELAY, self.animate)  # Continue animation
+        self.draw_ui()  # Redraw the maze after a tick
+        self.root.after(self.DELAY, self.animate)
 
 
 def generate_random_board(generator: Generator) -> MazeBoard:
@@ -258,8 +253,8 @@ if __name__ == "__main__":
     root.geometry(f"{window_width}x{window_height}")
 
     # Create two independent UI instances, one besides the other
-    # solvers = [SolverType.BFS, SolverType.DFS, SolverType.DIJIKSTRA, SolverType.A_STAR]
-    solvers = [SolverType.DFS, SolverType.A_STAR]
+    solvers = [SolverType.BFS, SolverType.DFS, SolverType.DIJIKSTRA, SolverType.A_STAR]
+    # solvers = [SolverType.DFS, SolverType.A_STAR]
     WholeUI(root, mazes, solvers, maze_width, maze_height, 10, 10)
 
     v = Scrollbar(root)

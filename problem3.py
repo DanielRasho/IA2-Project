@@ -18,15 +18,23 @@ DONE_COUNT = 0
 
 
 class UiStats:
-    def __init__(self, sType: SolverType, distance: int, expanded: int, isDone: bool):
+    def __init__(
+        self,
+        sType: SolverType,
+        distance: int,
+        expanded: int,
+        isDone: bool,
+        current_exp_count: int,
+    ):
         self.type = sType
         self.distance = distance
         self.expanded = expanded
         self.isDone = isDone
+        self.currentExpCount = current_exp_count
 
 
 class MazeUI:
-    CELL_SIZE = 5
+    CELL_SIZE = 10
     DELAY = 1  # milliseconds
 
     def __init__(
@@ -92,22 +100,23 @@ class MazeUI:
                 elif cell == CellMark.PATH:
                     self.canvas.create_rectangle(x0, y0, x1, y1, fill="brown")
                 elif cell == CellMark.START:
-                    self.canvas.create_rectangle(x0, y0, x1, y1, fill="lightgreen")
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill="blue")
                 elif cell == CellMark.END:
-                    self.canvas.create_rectangle(x0, y0, x1, y1, fill="pink")
+                    self.canvas.create_rectangle(x0, y0, x1, y1, fill="red")
 
         self.root.update()
 
     def get_stats(self) -> UiStats:
         current_board = self.mazes[self.current_experiment]
         if self.solver == None:
-            return UiStats(self.sType, 0, 0, False)
+            return UiStats(self.sType, 0, 0, False, 0)
         else:
             return UiStats(
                 self.sType,
                 current_board.distance,
                 self.solver.get_scanned_tiles(),
                 self.finished,
+                self.current_experiment + 1,
             )
         pass
 
@@ -161,32 +170,78 @@ class TableUI:
         y_offset: int,
     ):
         self.root = root
-        values = [[0, 0, 0] for _ in solvers]
-        self.table = {k: v for (k, v) in zip(solvers, values)}
 
-        entries = [tk.Label(root) for _ in solvers]
-        self.entries = {k: v for (k, v) in zip(solvers, entries)}
+        self.avg_table_header = tk.Label(
+            root, text="ALG\tAVG PLACE", font=("Helvetica", 20)
+        )
+        y = y_offset
+        self.avg_table_header.place(x=x_offset, y=y)
+        position_avg = [0 for _ in solvers]
+        self.avg_table = {k: v for (k, v) in zip(solvers, position_avg)}
+        entries = [
+            tk.Label(root, text="INITIAL TEXT", font=("Helvetica", 20)) for _ in solvers
+        ]
+        for i in range(len(entries)):
+            ent = entries[i]
+            x = x_offset
+            y += 40
+            ent.place(x=x, y=y)
+        self.avg_table_entries = {k: v for (k, v) in zip(solvers, entries)}
+
+        self.exp_table_header = tk.Label(
+            root, text="ALG\tDIST\tEXPAN\tPLACE\t#EXP", font=("Helvetica", 20)
+        )
+        y += 120
+        self.exp_table_header.place(x=x_offset, y=y)
+        values = [[0, 0, 0, 0] for _ in solvers]
+        self.exp_table = {k: v for (k, v) in zip(solvers, values)}
+        entries = [
+            tk.Label(root, text="INITIAL TEXT", font=("Helvetica", 20)) for _ in solvers
+        ]
+        for i in range(len(entries)):
+            ent = entries[i]
+            x = x_offset
+            y += 40
+            ent.place(x=x, y=y)
+        self.exp_table_entries = {k: v for (k, v) in zip(solvers, entries)}
 
         self.mazeUis = mazeUis
         self.animate()
 
-    def show_table(self):
-        for header in self.table:
-            row = self.table[header]
-            entry = self.entries[header]
+    def update_tables(self):
+        for header in self.exp_table:
+            row = self.exp_table[header]
+            entry = self.exp_table_entries[header]
+            entry.config(text=f"{header}\t{row[0]}\t{row[1]}\t{row[2]}\t{row[3]}")
+
+        for header in self.avg_table:
+            row = self.avg_table[header]
+            entry = self.avg_table_entries[header]
+            entry.config(text=f"{header}\t{row}")
 
     def animate(self):
         order = []
+        expCount = {}
         for ui in self.mazeUis:
             stats = ui.get_stats()
             if stats.isDone:
                 order.append(stats.type)
-            self.table[stats.type] = [stats.distance, stats.expanded, -1]
+            self.exp_table[stats.type] = [
+                stats.distance,
+                stats.expanded,
+                -1,
+                stats.currentExpCount,
+            ]
+            expCount[stats.type] = stats.currentExpCount
 
         for i in range(len(order)):
-            self.table[order[i]][2] = i + 1
+            ordType = order[i]
+            self.exp_table[ordType][2] = i + 1
+            self.avg_table[ordType] += (i + 1 - self.avg_table[ordType]) / expCount[
+                ordType
+            ]
 
-        self.show_table()
+        self.update_tables()
         self.root.after(self.DELAY, self.animate)  # Continue animation
 
 
@@ -251,6 +306,8 @@ if __name__ == "__main__":
         )
         mazeUis.append(ui)
 
+    x_offset = (maze_width + 10 + 10) * 2 + 50
+    y_offset = 10
     tableUi = TableUI(root, mazeUis, solvers, x_offset, y_offset)
 
     root.mainloop()

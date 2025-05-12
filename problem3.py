@@ -236,7 +236,7 @@ class WholeUI:
 
 def generate_random_board(generator: Generator) -> MazeBoard:
     board = generator.generate()
-    get_random_start_goal(board, 3)
+    get_random_start_goal(board, 10)
     return board
 
 

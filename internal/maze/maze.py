@@ -62,11 +62,10 @@ class MazeBoard:
         return result
 
 
-def get_random_start_goal(
-    maze: MazeBoard, min_distance: int
-) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+def get_random_start_goal(maze: MazeBoard, min_distance: int):
     """
     Select 2 random EMPTY cells from a mazeboard with a list a minimum manhattan distance.
+    The start and end of the MazeBoard are set in place!
     """
 
     empty_cells = [
@@ -82,6 +81,7 @@ def get_random_start_goal(
     random.shuffle(empty_cells)
     for cell in empty_cells:
         if abs(first_cell[0] - cell[0]) + abs(first_cell[1] - cell[1]) >= min_distance:
-            return first_cell, cell
+            self.start = first_cell
+            self.end = cell
 
     raise ValueError("No valid second cell found with the required distance.")

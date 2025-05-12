@@ -136,8 +136,13 @@ class MazeUI:
                 return
 
             current_board = self.mazes[self.current_experiment]
+            [srow, scol] = current_board.start
+            [erow, ecol] = current_board.end
             self.solver = SolverFromType(
-                self.sType, current_board, current_board.start, current_board.end
+                self.sType,
+                current_board,
+                current_board.cords_as_cell(current_board.start),
+                current_board.cords_as_cell(current_board.end),
             )
             self.finished = False
             DONE_COUNT -= 1

@@ -43,6 +43,12 @@ class MazeBoard:
         col = index - row * self.width
         return (row, col)
 
+    def cords_as_cell(self, cords: tuple[int, int]) -> int:
+        row = cords[0]
+        col = cords[1]
+
+        return row * self.width + col
+
     def set_start_and_end(self, start: tuple[int, int], end: tuple[int, int]):
         self.start = start
         self.set_cell(start[0], start[1], CellMark.START)

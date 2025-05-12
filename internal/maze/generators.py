@@ -2,6 +2,7 @@ from enum import IntEnum
 from typing import Tuple, List
 from .maze import MazeBoard, CellMark
 import random
+import math
 
 class GeneratorType(IntEnum):
     BORUBSKA = 0
@@ -9,8 +10,8 @@ class GeneratorType(IntEnum):
 
 class Generator:
     def __init__(self, height: int, width: int):
-        self.height = height
-        self.width = width
+        self.height = math.ceil((height - 1) / 2)
+        self.width = math.ceil((width - 1) / 2)
 
     '''Generate a fully flesh-out maze'''
     def generate(self) -> MazeBoard :
@@ -34,15 +35,15 @@ class BorubskaGenerator(Generator):
     def __init__(self, height: int, width: int):
         super().__init__(height, width)
         self.rng = random.Random()
-        self.grid = [[0b1111 for _ in range(width)] for _ in range(height)]
+        self.grid = [[0b1111 for _ in range(self.width)] for _ in range(self.height)]
         self.components = {}  # To keep track of connected components
         self.edges = []       # List of edges between components
         self.phase_completed = False
         
         # Initialize components and edges, each cell is its own component
-        for y in range(height):
-            for x in range(width):
-                idx = y * width + x
+        for y in range(self.height):
+            for x in range(self.width):
+                idx = y * self.width + x
 
                 # Insert each node as a component
                 self.components[idx] = idx
@@ -117,7 +118,10 @@ class BorubskaGenerator(Generator):
         return True
 
     def to_maze(self) -> MazeBoard:
-        """Convert the internal bitmask representation to a MazeBoard."""
+        """
+            Convert the internal bitmask representation to a MazeBoard.
+            It will always return a maze where width and height are even.
+        """
         maze_board = MazeBoard(self.height * 2 + 1, self.width * 2 + 1, CellMark.WALL)
         for i in range(self.height):
             for j in range(self.width):
@@ -143,8 +147,7 @@ class PrimsGenerator(Generator):
     VISITED = 4
 
     def __init__(self, height: int, width: int):
-        self.height = height
-        self.width = width
+        super().__init__(height, width)
         self.rng = random.Random()
         # Initialize all cells with all walls (0b1111) and not visited (0b00000)
         self.grid = [[0b1111 for _ in range(width)] for _ in range(height)]

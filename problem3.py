@@ -10,27 +10,14 @@ from internal.solver.DFS import DFS
 from internal.solver.Dijikstra import Dijikstra
 from internal.solver.solver_utils import SolverType, SolverFromType
 from random import randint
+import sys
 
-
-class UiStats:
-    def __init__(
-        self,
-        sType: SolverType,
-        distance: int,
-        expanded: int,
-        isDone: bool,
-        current_exp_count: int,
-    ):
-        self.type = sType
-        self.distance = distance
-        self.expanded = expanded
-        self.isDone = isDone
-        self.currentExpCount = current_exp_count
+sys.setrecursionlimit(1500)
 
 
 class WholeUI:
     CELL_SIZE = 10
-    DELAY = 1  # milliseconds
+    DELAY = 200  # milliseconds
 
     def __init__(
         self,
@@ -178,26 +165,27 @@ class WholeUI:
     def animate(self):
         # Done animating this current experiment
         experimentDone = len(self.doneSolversType) == len(self.solvers.keys())
+        if experimentDone:
+            self.current_experiment += 1
+            reachedEndOfExperiments = (
+                self.current_experiment < 0
+                and self.current_experiment >= len(self.mazes)
+            )
+            if reachedEndOfExperiments:
+                return
+
         for sType in self.solvers:
             solver: Solver = self.solvers[sType]
             solverBoard: MazeBoard = self.boards_per_player[sType][
-                self.current_experiment
+                self.current_experiment % len(self.solversType)
             ]
 
             doneButOthersAreNot = (
-                len(self.doneSolversType) != len(self.solvers.keys())
+                len(self.doneSolversType) != len(self.solversType)
                 and sType in self.doneSolversType
             )
 
             if experimentDone:
-                self.current_experiment += 1
-                reachedEndOfExperiments = (
-                    self.current_experiment < 0
-                    and self.current_experiment >= len(self.mazes)
-                )
-                if reachedEndOfExperiments:
-                    return
-
                 current_board = self.boards_per_player[sType][self.current_experiment]
                 [srow, scol] = current_board.start
                 [erow, ecol] = current_board.end
@@ -228,7 +216,7 @@ class WholeUI:
                     self.exp_table[sType][2] = finishPosition
                     self.avg_table[sType] += (
                         finishPosition - self.avg_table[sType]
-                    ) / self.current_experiment + 1
+                    ) / (self.current_experiment + 1)
 
                 self.draw_ui()
                 self.root.after(self.DELAY, self.animate)  # Continue animation

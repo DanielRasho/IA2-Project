@@ -8,6 +8,9 @@ class DFS(Solver):
 
     def __init__(self, board: MazeBoard, start: int, goal: int):
         super().__init__(board, start, goal)
+        self.start = start
+        self.goal = goal
+
         # Initialize stack for DFS
         self.stack = []
 
@@ -113,10 +116,8 @@ class DFS(Solver):
 
     def _reconstruct_path(self):
         """Reconstruct the path from start to goal."""
-        current = self.board.cords_as_cell(self.goal_coords)
-        start_index = self.board.cords_as_cell(
-            self.board.cell_as_coordinates(self.start)
-        )
+        current = self.goal
+        start_index = self.start
 
         while current != start_index:
             current_coords = self.board.cell_as_coordinates(current)

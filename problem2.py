@@ -8,7 +8,7 @@ from internal.solver.solver_utils import SolverType, SolverFromType
 
 class MazeUI:
     CELL_SIZE = 5
-    DELAY = 1  # milliseconds
+    DELAY = 1
 
     def __init__(self, root: tk.Tk, maze_board: MazeBoard, solver_type: SolverType, 
                  x_offset: int, y_offset: int, label: str):
@@ -35,14 +35,33 @@ class MazeUI:
         self.stats_frame = tk.Frame(root)
         self.stats_frame.place(x=x_offset, y=y_offset + canvas_height + 25)
         
-        self.path_length_label = tk.Label(self.stats_frame, text="Longitud: 0")
+        self.path_length_label = tk.Label(self.stats_frame, text="Path Length: 0")
         self.path_length_label.pack(side=tk.LEFT, padx=5)
         
-        self.nodes_explored_label = tk.Label(self.stats_frame, text="Nodos Explorados: 0")
+        self.nodes_explored_label = tk.Label(self.stats_frame, text="Nodes Explored: 0")
         self.nodes_explored_label.pack(side=tk.LEFT, padx=5)
         
         start_row, start_col = 1, 1
-        goal_row, goal_col = 79, 59 
+        
+        goal_row, goal_col = self.board.height - 2, self.board.width - 2
+        
+        if self.board.get_cell(start_row, start_col) == CellMark.WALL:
+            for r in range(1, self.board.height - 1):
+                for c in range(1, self.board.width - 1):
+                    if self.board.get_cell(r, c) == CellMark.EMPTY:
+                        start_row, start_col = r, c
+                        break
+                if self.board.get_cell(start_row, start_col) == CellMark.EMPTY:
+                    break
+        
+        if self.board.get_cell(goal_row, goal_col) == CellMark.WALL:
+            for r in range(self.board.height - 2, 0, -1):
+                for c in range(self.board.width - 2, 0, -1):
+                    if self.board.get_cell(r, c) == CellMark.EMPTY:
+                        goal_row, goal_col = r, c
+                        break
+                if self.board.get_cell(goal_row, goal_col) == CellMark.EMPTY:
+                    break
         
         start_index = start_row * self.board.width + start_col
         goal_index = goal_row * self.board.width + goal_col
@@ -50,7 +69,10 @@ class MazeUI:
         self.board.set_cell(start_row, start_col, CellMark.START)
         self.board.set_cell(goal_row, goal_col, CellMark.END)
         
-        self.solver = SolverFromType(solver_type, self.board, (start_row, start_col), (goal_row, goal_col))
+        print(f"Start position: ({start_row}, {start_col}), index: {start_index}")
+        print(f"Goal position: ({goal_row}, {goal_col}), index: {goal_index}")
+        
+        self.solver = SolverFromType(solver_type, self.board, start_index, goal_index)
         
         self.draw_maze()
         
@@ -84,7 +106,7 @@ class MazeUI:
         nodes_explored = self.solver.get_scanned_tiles()
         
         self.path_length_label.config(text=f"Longitud: {path_length}")
-        self.nodes_explored_label.config(text=f"Nodos Explorados: {nodes_explored}")
+        self.nodes_explored_label.config(text=f"Nodod explorados: {nodes_explored}")
         
         self.root.update()
     
@@ -95,11 +117,12 @@ class MazeUI:
             self.root.after(self.DELAY, self.animate)
         else:
             self.draw_maze()
-            print(f"{self.label.cget('text')} Laberinto resuelto.")
-            print(f"Longitud del camno: {len(self.solver.get_solution_path())}")
+            print(f"{self.label.cget('text')} Laberinto terinado.")
+            print(f"Longitud: {len(self.solver.get_solution_path())}")
             print(f"Nodos explorados: {self.solver.get_scanned_tiles()}")
 
 
+# ---------- MAIN ----------
 if __name__ == "__main__":
     print(" ==== RESOLVIENDO LABERINTO ===== ")
     
@@ -126,11 +149,11 @@ if __name__ == "__main__":
     solver_type, solver_label = solvers[2]
     
     app = MazeUI(
-        root,
-        maze,
+        root, 
+        maze, 
         solver_type,
-        x_offset=20,
-        y_offset=20,
+        x_offset=20, 
+        y_offset=20, 
         label=solver_label
     )
     

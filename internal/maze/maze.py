@@ -39,6 +39,10 @@ class MazeBoard:
         """Returns 2D coordinates given a cell index"""
         return (index % self.width, index // self.width)
 
+    def set_start_and_end(self, start: tuple[int, int], end: tuple[int, int]):
+        self.start = start
+        self.end = end
+
     def _index(self, row: int, col: int) -> int:
         return row * self.width + col
 
@@ -81,7 +85,7 @@ def get_random_start_goal(maze: MazeBoard, min_distance: int):
     random.shuffle(empty_cells)
     for cell in empty_cells:
         if abs(first_cell[0] - cell[0]) + abs(first_cell[1] - cell[1]) >= min_distance:
-            self.start = first_cell
-            self.end = cell
+            maze.set_start_and_end(first_cell, cell)
+            return
 
     raise ValueError("No valid second cell found with the required distance.")

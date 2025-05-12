@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import Scrollbar, RIGHT, Y
 from threading import Lock
 from internal.maze.maze import MazeBoard, CellMark, get_random_start_goal
 from internal.maze.generators import Generator, PrimsGenerator, BorubskaGenerator
@@ -14,6 +15,14 @@ WORKERS_COUNT = 0
 
 DONE_COUNT_LOCK = Lock()
 DONE_COUNT = 0
+
+
+class UiStats:
+    def __init__(self, sType: SolverType, distance: int, expanded: int, isDone: bool):
+        self.type = sType
+        self.distance = distance
+        self.expanded = expanded
+        self.isDone = isDone
 
 
 class MazeUI:
@@ -89,6 +98,19 @@ class MazeUI:
 
         self.root.update()
 
+    def get_stats(self) -> UiStats:
+        current_board = self.mazes[self.current_experiment]
+        if self.solver == None:
+            return UiStats(self.sType, 0, 0, False)
+        else:
+            return UiStats(
+                self.sType,
+                current_board.distance,
+                self.solver.get_scanned_tiles(),
+                self.finished,
+            )
+        pass
+
     def animate(self):
         global DONE_COUNT
         DONE_COUNT_LOCK.acquire()
@@ -128,6 +150,8 @@ class MazeUI:
 
 
 class TableUI:
+    DELAY = 1
+
     def __init__(
         self,
         root: tk.Tk,
@@ -136,18 +160,39 @@ class TableUI:
         x_offset: int,
         y_offset: int,
     ):
-        values = [[] for _ in solvers]
+        self.root = root
+        values = [[0, 0, 0] for _ in solvers]
         self.table = {k: v for (k, v) in zip(solvers, values)}
 
+        entries = [tk.Label(root) for _ in solvers]
+        self.entries = {k: v for (k, v) in zip(solvers, entries)}
+
+        self.mazeUis = mazeUis
+        self.animate()
+
+    def show_table(self):
+        for header in self.table:
+            row = self.table[header]
+            entry = self.entries[header]
+
     def animate(self):
-        self.solver
-        self.draw_maze()
+        order = []
+        for ui in self.mazeUis:
+            stats = ui.get_stats()
+            if stats.isDone:
+                order.append(stats.type)
+            self.table[stats.type] = [stats.distance, stats.expanded, -1]
+
+        for i in range(len(order)):
+            self.table[order[i]][2] = i + 1
+
+        self.show_table()
         self.root.after(self.DELAY, self.animate)  # Continue animation
 
 
 def generate_random_board(generator: Generator) -> MazeBoard:
     board = generator.generate()
-    get_random_start_goal(board, 10)
+    get_random_start_goal(board, 3)
     return board
 
 
@@ -169,9 +214,11 @@ if __name__ == "__main__":
     # Initialize Tkinter root window
     root = tk.Tk()
     root.title("Maze solvers comparison")
+    v = Scrollbar(root)
+    v.pack(side=RIGHT, fill=Y)
 
-    maze_width = width * MazeUI.CELL_SIZE
-    maze_height = height * MazeUI.CELL_SIZE
+    maze_width = ((generator.width * 2) + 1) * MazeUI.CELL_SIZE
+    maze_height = ((generator.height * 2) + 1) * MazeUI.CELL_SIZE
 
     # Set the window size dynamically to fit both canvases vertically
     window_width = maze_width + 20

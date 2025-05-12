@@ -50,6 +50,9 @@ class MazeBoard:
         self.end = end
         self.set_cell(end[0], end[1], CellMark.END)
 
+    def set_distance(self, distance: int):
+        self.distance = distance
+
     def _index(self, row: int, col: int) -> int:
         return row * self.width + col
 
@@ -95,9 +98,11 @@ def get_random_start_goal(maze: MazeBoard, min_distance: int):
     # Shuffle and find the first one that matches the distance
     random.shuffle(empty_cells)
     for cell in empty_cells:
-        if abs(first_cell[0] - cell[0]) + abs(first_cell[1] - cell[1]) >= min_distance:
+        distance = abs(first_cell[0] - cell[0]) + abs(first_cell[1] - cell[1])
+        if distance >= min_distance:
             print("Setting start and end", first_cell, cell)
             maze.set_start_and_end(first_cell, cell)
+            maze.set_distance(distance)
             return
 
     raise ValueError("No valid second cell found with the required distance.")

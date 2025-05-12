@@ -25,6 +25,16 @@ class MazeBoard:
         self.width = width
         self.cells = [fill] * (height * width)
 
+    def copy_from(other):
+        copy = MazeBoard(other.height, other.width)
+        copy.set_distance(other.distance)
+        copy.set_start_and_end(other.start, other.end)
+
+        for i in range(len(other.cells)):
+            copy.cells[i] = other.cells[i]
+
+        return copy
+
     def get_cell(self, row: int, col: int) -> CellMark:
         if not self._valid_coords(row, col):
             raise IndexError("Coordinates out of bounds")

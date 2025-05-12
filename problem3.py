@@ -1,4 +1,5 @@
 import tkinter as tk
+from threading import Lock
 from internal.maze.maze import MazeBoard, CellMark, get_random_start_goal
 from internal.maze.generators import Generator, PrimsGenerator, BorubskaGenerator
 from internal.solver.A_Star import A_Star
@@ -9,8 +10,10 @@ from internal.solver.solver_utils import SolverType, SolverFromType
 from random import randint
 
 
-workersCount = 0
-doneCount = 0
+WORKERS_COUNT = 0
+
+DONE_COUNT_LOCK = Lock()
+DONE_COUNT = 0
 
 
 class MazeUI:
@@ -87,9 +90,10 @@ class MazeUI:
         self.root.update()
 
     def animate(self):
+        global DONE_COUNT
         # Done animating this current experiment
-        experimentDone = doneCount == workersCount and self.finished
-        doneButOthersAreNot = doneCount != workersCount and self.finished
+        experimentDone = DONE_COUNT == WORKERS_COUNT and self.finished
+        doneButOthersAreNot = DONE_COUNT != WORKERS_COUNT and self.finished
         if experimentDone:
             self.current_experiment += 1
             reachedEndOfExperiments = (
@@ -104,14 +108,39 @@ class MazeUI:
                 self.sType, current_board, current_board.start, current_board.end
             )
             self.finished = False
+            with DONE_COUNT_LOCK:
+                DONE_COUNT -= 1
             self.draw_maze()  # Redraw the maze after a tick
             self.root.after(self.DELAY, self.animate)
         elif doneButOthersAreNot:
             self.root.after(self.DELAY, self.animate)
         else:  # Normal tick
-            self.solver
+            self.finished = self.solver.solve_tick()
+
+            if self.finished:
+                with DONE_COUNT_LOCK:
+                    DONE_COUNT += 1
+
             self.draw_maze()
             self.root.after(self.DELAY, self.animate)  # Continue animation
+
+
+class TableUI:
+    def __init__(
+        self,
+        root: tk.Tk,
+        mazeUis: list[MazeUI],
+        solvers: list[SolverType],
+        x_offset: int,
+        y_offset: int,
+    ):
+        values = [[] for _ in solvers]
+        self.table = {k: v for (k, v) in zip(solvers, values)}
+
+    def animate(self):
+        self.solver
+        self.draw_maze()
+        self.root.after(self.DELAY, self.animate)  # Continue animation
 
 
 def generate_random_board(generator: Generator) -> MazeBoard:
@@ -149,9 +178,10 @@ if __name__ == "__main__":
 
     # Create two independent UI instances, one besides the other
     solvers = [SolverType.BFS, SolverType.DFS, SolverType.DIJIKSTRA, SolverType.A_STAR]
-    workersCount = len(solvers)
-    doneCount = workersCount
-    for i in range(workersCount):
+    WORKERS_COUNT = len(solvers)
+    DONE_COUNT = WORKERS_COUNT
+    mazeUis = []
+    for i in range(WORKERS_COUNT):
         solver = solvers[i]
         x_offset = 10
         if i % 2 != 0:
@@ -160,7 +190,7 @@ if __name__ == "__main__":
         if i > 1:
             y_offset += maze_height + 50
 
-        MazeUI(
+        ui = MazeUI(
             root,
             mazes,
             solver,
@@ -170,5 +200,8 @@ if __name__ == "__main__":
             y_offset,
             label=solver,
         )
+        mazeUis.append(ui)
+
+    tableUi = TableUI(root, mazeUis, solvers, x_offset, y_offset)
 
     root.mainloop()

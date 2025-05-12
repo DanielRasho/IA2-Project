@@ -1,4 +1,7 @@
 import tkinter as tk
+import sys
+import time
+
 from tkinter import Scrollbar, RIGHT, Y
 from threading import Lock
 from internal.maze.maze import MazeBoard, CellMark, get_random_start_goal
@@ -10,7 +13,7 @@ from internal.solver.DFS import DFS
 from internal.solver.Dijikstra import Dijikstra
 from internal.solver.solver_utils import SolverType, SolverFromType
 from random import randint
-import sys
+
 
 sys.setrecursionlimit(15000)
 
@@ -175,6 +178,7 @@ class WholeUI:
 
         if allDoneExperiment:
             print("ALL COMPLETED!")
+            time.sleep(2)
             self.doneSolversType = []
             self.current_experiment += 1
             if self.reached_end_experiments():

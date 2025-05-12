@@ -5,15 +5,19 @@ from ..maze.maze import MazeBoard, CellMark
 from .solver import Solver
 
 class BFS(Solver):
-    def __init__(self, board: MazeBoard, start: Tuple[int, int], goal: Tuple[int, int]):
+    def __init__(self, board: MazeBoard, start: int, goal: int):
         super().__init__(board, start, goal)
         self.board = board
-        self.start = start
-        self.goal = goal
         
-        self.queue = deque([start])
-        self.visited = {start}
-        self.parent = {start: None}
+        self.start_index = start
+        self.goal_index = goal
+        
+        self.start_coords = self.board.cell_as_coordinates(start)
+        self.goal_coords = self.board.cell_as_coordinates(goal)
+        
+        self.queue = deque([self.start_coords])  
+        self.visited = {self.start_coords}  
+        self.parent = {self.start_coords: None}  
         
         self.scanned_tiles = 0
         self.solution_path = []
@@ -51,7 +55,7 @@ class BFS(Solver):
             
         current = self.queue.popleft()
         
-        if current == self.goal:
+        if current == self.goal_coords:
             self.found_goal = True
             return True
             
@@ -65,31 +69,38 @@ class BFS(Solver):
                 self.parent[neighbor] = current
                 
                 row, col = neighbor
-                if neighbor != self.start and neighbor != self.goal:
+                if neighbor != self.start_coords and neighbor != self.goal_coords:
                     self.board.set_cell(row, col, CellMark.SCANNED)
                 
         return True
         
     def _reconstruct_path(self):
         """Reconstruct the path from start to goal using the parent dictionary."""
-        current = self.goal
+        current = self.goal_coords
         path = []
         
-        while current != self.start:
+        while current != self.start_coords:
             path.append(current)
             current = self.parent[current]
             
-        path.append(self.start)
-        path.reverse()
+        path.append(self.start_coords)
+        path.reverse()  
         
-        self.solution_path = path
+        self.solution_path = [
+            row * self.board.width + col for row, col in path
+        ]
         
-        # Mark the path on the board
         for position in path:
             row, col = position
-            if position != self.start and position != self.goal:
+            if position != self.start_coords and position != self.goal_coords:
                 self.board.set_cell(row, col, CellMark.PATH)
                 
-        print(f"Camino encontrad! Longitud: {len(path)}")
-        print(f"Nodos escaneados: {self.scanned_tiles}")
+        print(f"Path found! Length: {len(path)}")
+        print(f"Tiles scanned: {self.scanned_tiles}")
+    
+    def get_scanned_tiles(self) -> int:
+        return self.scanned_tiles
+
+    def get_solution_path(self) -> list[int]:
+        return self.solution_path
 

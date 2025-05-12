@@ -4,19 +4,23 @@ from ..maze.maze import MazeBoard, CellMark
 from .solver import Solver
 
 class Dijikstra(Solver):
-    def __init__(self, board: MazeBoard, start: Tuple[int, int], goal: Tuple[int, int]):
+    def __init__(self, board: MazeBoard, start: int, goal: int):
         super().__init__(board, start, goal)
         self.board = board
-        self.start = start
-        self.goal = goal
+        
+        self.start_index = start
+        self.goal_index = goal
+        
+        self.start_coords = self.board.cell_as_coordinates(start)
+        self.goal_coords = self.board.cell_as_coordinates(goal)
         
         self.distances = {} 
-        self.previous = {}  
-        self.priority_queue = []
-        self.visited = set() 
+        self.previous = {}   
+        self.priority_queue = []  
+        self.visited = set()  
         
-        self.distances[start] = 0
-        heapq.heappush(self.priority_queue, (0, start))
+        self.distances[self.start_coords] = 0
+        heapq.heappush(self.priority_queue, (0, self.start_coords))
         
         self.scanned_tiles = 0
         self.solution_path = []
@@ -61,10 +65,10 @@ class Dijikstra(Solver):
         self.scanned_tiles += 1
         
         row, col = current_position
-        if current_position != self.start and current_position != self.goal:
+        if current_position != self.start_coords and current_position != self.goal_coords:
             self.board.set_cell(row, col, CellMark.SCANNED)
         
-        if current_position == self.goal:
+        if current_position == self.goal_coords:
             self.found_goal = True
             return True
             
@@ -80,23 +84,31 @@ class Dijikstra(Solver):
         
     def _reconstruct_path(self):
         """Reconstruct the path from start to goal using the previous dictionary."""
-        current = self.goal
+        current = self.goal_coords
         path = []
         
-        while current != self.start:
+        while current != self.start_coords:
             path.append(current)
             current = self.previous[current]
             
-        path.append(self.start)
-        path.reverse() 
+        path.append(self.start_coords)
+        path.reverse()
         
-        self.solution_path = path
+        self.solution_path = [
+            row * self.board.width + col for row, col in path
+        ]
         
         for position in path:
             row, col = position
-            if position != self.start and position != self.goal:
+            if position != self.start_coords and position != self.goal_coords:
                 self.board.set_cell(row, col, CellMark.PATH)
                 
-        print(f"Camino encontrado! Longitud: {len(path)}")
-        print(f"Nodos visitados: {self.scanned_tiles}")
+        print(f"Path found! Length: {len(path)}")
+        print(f"Tiles scanned: {self.scanned_tiles}")
+    
+    def get_scanned_tiles(self) -> int:
+        return self.scanned_tiles
+
+    def get_solution_path(self) -> list[int]:
+        return self.solution_path
 

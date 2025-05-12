@@ -60,6 +60,7 @@ class DFS(Solver):
             CellMark.END,
         ]:
             self.board.set_cell(current_row, current_col, CellMark.SCANNED)
+            self.scanned_tiles += 1
 
         # Get unvisited neighbors
         neighbors = self._get_unvisited_neighbors(current)

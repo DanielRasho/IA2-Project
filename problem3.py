@@ -3,6 +3,7 @@ from tkinter import Scrollbar, RIGHT, Y
 from threading import Lock
 from internal.maze.maze import MazeBoard, CellMark, get_random_start_goal
 from internal.maze.generators import Generator, PrimsGenerator, BorubskaGenerator
+from internal.solver.solver import Solver
 from internal.solver.A_Star import A_Star
 from internal.solver.BFS import BFS
 from internal.solver.DFS import DFS
@@ -54,20 +55,20 @@ class WholeUI:
         self.solversType = solvers
         self.doneSolversType = []
 
-        self.board_per_solver = {}
+        self.boards_per_player = {}
         for sType in solvers:
-            self.board_per_solver[sType] = [MazeBoard.copy_from(m) for m in mazes]
+            self.boards_per_player[sType] = [MazeBoard.copy_from(m) for m in mazes]
             # self.board_per_solver[sType] = [m for m in mazes]
 
         self.solvers = {
             st: SolverFromType(
                 st,
-                self.board_per_solver[st][0],
-                self.board_per_solver[st][0].cords_as_cell(
-                    self.board_per_solver[st][0].start
+                self.boards_per_player[st][0],
+                self.boards_per_player[st][0].cords_as_cell(
+                    self.boards_per_player[st][0].start
                 ),
-                self.board_per_solver[st][0].cords_as_cell(
-                    self.board_per_solver[st][0].end
+                self.boards_per_player[st][0].cords_as_cell(
+                    self.boards_per_player[st][0].end
                 ),
             )
             for st in solvers
@@ -136,7 +137,7 @@ class WholeUI:
             return
 
         for sType in self.solvers:
-            maze_board: MazeBoard = self.board_per_solver[sType][
+            maze_board: MazeBoard = self.boards_per_player[sType][
                 self.current_experiment
             ]
             canvas: tk.Canvas = self.solvers_canvas[sType]
@@ -178,7 +179,11 @@ class WholeUI:
         # Done animating this current experiment
         experimentDone = len(self.doneSolversType) == len(self.solvers.keys())
         for sType in self.solvers:
-            solver = self.solvers[sType]
+            solver: Solver = self.solvers[sType]
+            solverBoard: MazeBoard = self.boards_per_player[sType][
+                self.current_experiment
+            ]
+
             doneButOthersAreNot = (
                 len(self.doneSolversType) != len(self.solvers.keys())
                 and sType in self.doneSolversType
@@ -193,7 +198,7 @@ class WholeUI:
                 if reachedEndOfExperiments:
                     return
 
-                current_board = self.board_per_solver[sType][self.current_experiment]
+                current_board = self.boards_per_player[sType][self.current_experiment]
                 [srow, scol] = current_board.start
                 [erow, ecol] = current_board.end
                 self.solvers[sType] = SolverFromType(
@@ -208,8 +213,23 @@ class WholeUI:
             elif doneButOthersAreNot:
                 self.root.after(self.DELAY, self.animate)
             else:  # Normal tick
-                if solver.solve_tick():
+                solved_laberinth = solver.solve_tick()
+
+                self.exp_table[sType] = [
+                    solverBoard.distance,
+                    solver.get_scanned_tiles(),
+                    -1,
+                    self.current_experiment + 1,
+                ]
+
+                if solved_laberinth:
                     self.doneSolversType.append(sType)
+                    finishPosition = len(self.doneSolversType)
+                    self.exp_table[sType][2] = finishPosition
+                    self.avg_table[sType] += (
+                        finishPosition - self.avg_table[sType]
+                    ) / self.current_experiment + 1
+
                 self.draw_ui()
                 self.root.after(self.DELAY, self.animate)  # Continue animation
 

@@ -41,6 +41,7 @@ class MazeUI:
         self.current_experiment = -1
         self.solver = None
         self.finished = True
+        self.sType = solverType
 
         # Create canvas with an offset
         self.canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
@@ -102,7 +103,6 @@ class MazeUI:
             self.solver = SolverFromType(
                 self.sType, current_board, current_board.start, current_board.end
             )
-
             self.finished = False
             self.draw_maze()  # Redraw the maze after a tick
             self.root.after(self.DELAY, self.animate)
@@ -140,11 +140,11 @@ if __name__ == "__main__":
     root.title("Maze solvers comparison")
 
     maze_width = width * MazeUI.CELL_SIZE
-    maze_hegith = height * MazeUI.CELL_SIZE
+    maze_height = height * MazeUI.CELL_SIZE
 
     # Set the window size dynamically to fit both canvases vertically
     window_width = maze_width + 20
-    window_height = maze_hegith + 100
+    window_height = maze_height + 100
     root.geometry(f"{window_width}x{window_height}")
 
     # Create two independent UI instances, one besides the other
@@ -157,15 +157,15 @@ if __name__ == "__main__":
         if i % 2 != 0:
             x_offset += maze_width + 10
         y_offset = 10
-        if i % 2 != 0:
-            y_offset += maze_hegith + 10
+        if i > 1:
+            y_offset += maze_height + 50
 
         MazeUI(
             root,
             mazes,
             solver,
             maze_width,
-            maze_hegith,
+            maze_height,
             x_offset,
             y_offset,
             label=solver,

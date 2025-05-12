@@ -39,7 +39,9 @@ class MazeBoard:
 
     def cell_as_coordinates(self, index: int) -> Tuple[int, int]:
         """Returns 2D coordinates given a cell index"""
-        return (index % self.width, index // self.width)
+        row = index // self.width
+        col = index - row * self.width
+        return (row, col)
 
     def set_start_and_end(self, start: tuple[int, int], end: tuple[int, int]):
         self.start = start

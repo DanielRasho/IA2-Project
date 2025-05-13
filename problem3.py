@@ -20,7 +20,8 @@ sys.setrecursionlimit(15000)
 
 class WholeUI:
     CELL_SIZE = 10
-    DELAY = 10  # milliseconds
+    PAUSE_SECS = 2
+    DELAY = 5  # milliseconds
 
     def __init__(
         self,
@@ -178,7 +179,7 @@ class WholeUI:
 
         if allDoneExperiment:
             print("ALL COMPLETED!")
-            time.sleep(2)
+            time.sleep(self.PAUSE_SECS)
             self.doneSolversType = []
             self.current_experiment += 1
             if self.reached_end_experiments():
